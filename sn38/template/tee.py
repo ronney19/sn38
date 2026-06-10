@@ -29,7 +29,7 @@ class ValidatorSession:
             from dstack_sdk import DstackClient
             client = DstackClient()
             info = client.info()
-            quote = client.get_quote(b"sn38-chronogpt-validator")
+            quote = client.get_quote(b"sn38-chronollm-validator")
 
             self.attestation = quote.quote
             self.compose_hash = info.compose_hash

@@ -26,7 +26,7 @@ from ..template.validator_db import get_connection, get_cached_result, save_resu
 from ..template.leak import evaluate
 from ..template.quality import run_quality_duels
 
-BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8000")
+BACKEND_URL = "https://api.chronollm.com"
 NUM_YEARS = len(ALL_YEARS)
 
 def run(args):

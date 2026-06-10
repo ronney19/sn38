@@ -8,3 +8,4 @@ uv.lock
 validator_cache.db
 models.json
 /phala.toml
+.DS_Store

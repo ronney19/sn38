@@ -31,13 +31,38 @@ phala deploy \
 
 > **Note**: Replace the hotkey path with your actual wallet path (e.g. `~/.bittensor/wallets/<your-wallet>/hotkeys/<your-hotkey>`).
 
+After deploying, Phala returns a CVM ID (e.g. `c797eb4a-86d6-4f27-a4d9-2973bd7a3d12`) and a URL to monitor the deployment from your browser. Save the CVM ID for later use.
+
 ### 3. Verify attestation
 
 ```bash
-phala cvms attestation
+phala cvms attestation --cvm-id <your-cvm-id>
 ```
 
 The `compose-hash` in the event log proves the validator is running the correct, unmodified code.
+
+## Updating
+
+To update the validator (e.g. after a new image is released), run the same deploy command with `--cvm-id`:
+
+```bash
+phala deploy \
+  --cvm-id <your-cvm-id> \
+  -c docker-compose.validator.yml \
+  --pre-launch-script scripts/prelaunch.sh
+```
+
+## Monitoring
+
+```bash
+# View logs
+phala cvms logs --cvm-id <your-cvm-id>
+
+# Get CVM details
+phala cvms get --cvm-id <your-cvm-id>
+```
+
+You can also monitor the validator from the Phala Cloud dashboard using the URL provided after deployment.
 
 ## Frequency
 

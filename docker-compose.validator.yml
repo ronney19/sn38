@@ -1,25 +1,25 @@
 version: '3.8'
 services:
   validator:
-    image: chronollm/sn38-validator@sha256:480dfb83c420fb544b09657b9b18ac7d311046e6e94137e2f896d209a1e2629b
+    image: chronollm/sn38-validator@sha256:bf9f53bc732ef00b9a5bfceb3cf3fb9fee4f5974880268b9c8ce436b5431829c
     restart: "no"
     volumes:
       - /var/run/dstack.sock:/var/run/dstack.sock
       - validator-data:/app/data
     environment:
-      - BACKEND_URL=${BACKEND_URL:-https://api.sn38.io}
       - NETUID=38
       - SUBTENSOR_NETWORK=finney
       # This secret is encrypted client-side by Phala CLI before transmission
       - HOTKEY_FILE_CONTENT=${HOTKEY_FILE_CONTENT}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+    # GPU disabled for CPU TEE testing
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
 
 volumes:
   validator-data:
