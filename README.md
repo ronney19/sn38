@@ -1,6 +1,6 @@
 # SN38 — ChronoLLM
 
-**Bittensor Subnet 38** — Competitive training of chronologically consistent language models.
+**Bittensor Subnet 38** — Competitive training of chronologically consistent Large Language Models.
 
 > Currently in testing phase on mainnet.
 
@@ -87,9 +87,9 @@ Anyone can verify the attestation to confirm the validator is running the correc
 
 ## Model requirements
 
-- Must use the ChronoGPT architecture (modified NanoGPT)
+- Must use the ChronoGPT architecture (a chain of yearly model implementing the [ChronoGPT](sn38/template/chronogpt_model.py) class)
 - Safetensors format (no pickle)
-- Maximum 2B parameters
+- Maximum 2B parameters - initial goal is too reduce the time leaks and improve the quality of the model while staying small and efficient.
 
 ## Getting started
 
@@ -103,4 +103,4 @@ Anyone can verify the attestation to confirm the validator is running the correc
 
 ## License
 
-This project is licensed under the MIT License. Full details are available in the [LICENSE](LICENSE) file.
+This repository is licensed under the MIT License. Full details are available in the [LICENSE](LICENSE) file.
