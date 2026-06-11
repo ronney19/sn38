@@ -26,7 +26,7 @@ class ValidatorSession:
 
         try:
             from dstack_sdk import DstackClient
-            client = DstackClient()
+            client = DstackClient(timeout=120)
             result = client.get_tls_key(
                 subject=hotkey,
                 usage_ra_tls=True,
@@ -52,7 +52,6 @@ class ValidatorSession:
             print(f"[TEE] get_tls_key failed: {type(e).__name__}: {e}", flush=True)
 
         self.session = requests.Session()
-        self.session.verify = False
         if self._cert_path and self._key_path:
             self.session.cert = (self._cert_path, self._key_path)
         retry = Retry(
