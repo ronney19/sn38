@@ -1,13 +1,16 @@
 """
-TEE attestation for validator authentication.
+TEE authentication via RA-TLS.
 
-Uses dstack SDK to obtain attestation from inside a TEE.
-The attestation is attached to backend API requests via headers.
-Traffic is protected by HTTPS — TLS terminates inside the CVM,
-so the host operator cannot read the requests or responses.
+The validator obtains a TLS certificate with attestation embedded (RA-TLS)
+from the dstack SDK. This cert is used as a client certificate for mTLS
+with the backend. The attestation is in X.509 extensions — no separate
+headers needed, TLS handles replay protection natively.
 
 Retries indefinitely on backend downtime.
 """
+
+import os
+import tempfile
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -15,29 +18,43 @@ from urllib3.util.retry import Retry
 
 
 class ValidatorSession:
-    """
-    HTTP session that attaches TEE attestation to every backend request.
-    Retries indefinitely on connection errors and 5xx responses.
-    """
 
-    def __init__(self, backend_url: str):
+    def __init__(self, backend_url: str, hotkey: str = "unknown"):
         self.backend_url = backend_url
-        self.attestation = None
-        self.compose_hash = None
+        self._cert_path = None
+        self._key_path = None
 
         try:
             from dstack_sdk import DstackClient
             client = DstackClient()
-            info = client.info()
-            quote = client.get_quote(b"sn38-chronogpt-validator")
+            result = client.get_tls_key(
+                subject=hotkey,
+                usage_ra_tls=True,
+                usage_client_auth=True,
+                with_app_info=True,
+            )
 
-            self.attestation = quote.quote
-            self.compose_hash = info.compose_hash
-        except Exception:
-            pass
+            cert_pem = "\n".join(result.certificate_chain)
+            key_pem = result.key
+
+            print(f"[TEE] cert length: {len(cert_pem)}, key length: {len(key_pem)}", flush=True)
+
+            cert_file = tempfile.NamedTemporaryFile(suffix=".pem", delete=False, mode="w")
+            cert_file.write(cert_pem)
+            cert_file.close()
+            self._cert_path = cert_file.name
+
+            key_file = tempfile.NamedTemporaryFile(suffix=".pem", delete=False, mode="w")
+            key_file.write(key_pem)
+            key_file.close()
+            self._key_path = key_file.name
+        except Exception as e:
+            print(f"[TEE] get_tls_key failed: {type(e).__name__}: {e}", flush=True)
 
         self.session = requests.Session()
         self.session.verify = False
+        if self._cert_path and self._key_path:
+            self.session.cert = (self._cert_path, self._key_path)
         retry = Retry(
             total=None,
             backoff_factor=5,
@@ -49,18 +66,10 @@ class ValidatorSession:
 
     @property
     def is_tee(self) -> bool:
-        return self.attestation is not None
-
-    def _headers(self) -> dict:
-        if not self.attestation:
-            return {}
-        return {
-            "X-TEE-Attestation": self.attestation,
-            "X-TEE-Compose-Hash": self.compose_hash or "",
-        }
+        return self._cert_path is not None
 
     def get(self, path: str) -> requests.Response:
-        return self.session.get(f"{self.backend_url}{path}", headers=self._headers())
+        return self.session.get(f"{self.backend_url}{path}")
 
-    def post(self, path: str, json=None) -> requests.Response:
-        return self.session.post(f"{self.backend_url}{path}", json=json, headers=self._headers())
+    def post(self, path: str, json_data=None) -> requests.Response:
+        return self.session.post(f"{self.backend_url}{path}", json=json_data)

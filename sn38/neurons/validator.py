@@ -26,13 +26,14 @@ from ..template.validator_db import get_connection, get_cached_result, save_resu
 from ..template.leak import evaluate
 from ..template.quality import run_quality_duels
 
-BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8000")
+BACKEND_URL = "https://api.chronollm.com"
 NUM_YEARS = len(ALL_YEARS)
 
 def run(args):
     bt.logging.set_info()
 
-    api = BackendAPI(BACKEND_URL)
+    wallet = bt.Wallet(name=args.wallet_name, hotkey=args.wallet_hotkey)
+    api = BackendAPI(BACKEND_URL, hotkey=wallet.hotkey.ss58_address)
 
     config = api.get_config()
     eval_round = api.get_eval_round()
@@ -43,7 +44,6 @@ def run(args):
     owner_uid = NETWORKS[args.network]["owner_uid"]
 
     conn = get_connection()
-    wallet = bt.Wallet(name=args.wallet_name, hotkey=args.wallet_hotkey)
     subtensor = bt.Subtensor(network=args.network)
     metagraph = subtensor.metagraph(netuid=netuid)
 

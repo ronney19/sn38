@@ -5,11 +5,10 @@ from .tee import ValidatorSession
 
 
 class BackendAPI:
-    def __init__(self, backend_url: str):
-        self.session = ValidatorSession(backend_url)
+    def __init__(self, backend_url: str, hotkey: str = "unknown"):
+        self.session = ValidatorSession(backend_url, hotkey=hotkey)
         bt.logging.info(f"Backend URL: {backend_url}")
         bt.logging.info(f"TEE status: {self.session.is_tee}")
-        bt.logging.info(f"TLS verify: {self.session.session.verify}")
 
     def get_config(self):
         return self.session.get("/config").json()
