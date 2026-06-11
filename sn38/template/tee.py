@@ -1,10 +1,9 @@
 """
 TEE attestation for validator authentication.
 
-Uses dstack SDK to obtain attestation from inside a TEE.
-The attestation is attached to backend API requests via headers.
-Traffic is protected by HTTPS — TLS terminates inside the CVM,
-so the host operator cannot read the requests or responses.
+Uses dstack SDK to obtain full attestation from inside a TEE.
+The attestation is attached to backend API requests via a header.
+The backend forwards it to dstack-verifier for full verification.
 
 Retries indefinitely on backend downtime.
 """
@@ -23,16 +22,12 @@ class ValidatorSession:
     def __init__(self, backend_url: str):
         self.backend_url = backend_url
         self.attestation = None
-        self.compose_hash = None
 
         try:
             from dstack_sdk import DstackClient
             client = DstackClient()
-            info = client.info()
-            quote = client.get_quote(b"sn38-chronollm-validator")
-
-            self.attestation = quote.quote
-            self.compose_hash = info.compose_hash
+            result = client.attest(b"sn38-chronollm-validator")
+            self.attestation = result.attestation
         except Exception:
             pass
 
@@ -56,7 +51,6 @@ class ValidatorSession:
             return {}
         return {
             "X-TEE-Attestation": self.attestation,
-            "X-TEE-Compose-Hash": self.compose_hash or "",
         }
 
     def get(self, path: str) -> requests.Response:
