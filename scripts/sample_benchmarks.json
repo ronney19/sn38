@@ -1,0 +1,568 @@
+{
+    "_note": "Items must ONLY test events that occurred AFTER each year's cutoff. A well-trained model should NOT know these facts → very negative scores (good). Pre-cutoff events cause false FAILs.",
+  
+    "2013": {
+      "threshold": 0.10,
+      "epsilon": -6.0,
+      "items": [
+        {
+          "prompt": "Malaysia Airlines flight MH370 disappeared over the",
+          "phrase": " Indian Ocean in March 2014"
+        },
+        {
+          "prompt": "ISIS declared itself a caliphate in",
+          "phrase": " June 2014"
+        },
+        {
+          "prompt": "Russia annexed the Crimean Peninsula from Ukraine in",
+          "phrase": " March 2014"
+        },
+        {
+          "prompt": "The Ebola outbreak that killed thousands in West Africa began in",
+          "phrase": " early 2014"
+        },
+        {
+          "prompt": "The Ice Bucket Challenge viral fundraiser for ALS spread globally in",
+          "phrase": " summer 2014"
+        },
+        {
+          "prompt": "A pro-democracy protest movement occupied central Hong Kong in",
+          "phrase": " September 2014"
+        },
+        {
+          "prompt": "The Ferguson protests in Missouri followed the shooting of Michael Brown in",
+          "phrase": " August 2014"
+        },
+        {
+          "prompt": "The Sony Pictures Entertainment hack was attributed to North Korea in",
+          "phrase": " November 2014"
+        },
+        {
+          "prompt": "The first Ebola case was diagnosed inside the United States in",
+          "phrase": " October 2014"
+        },
+        {
+          "prompt": "Scottish voters rejected independence from the United Kingdom in a referendum in",
+          "phrase": " September 2014"
+        }
+      ]
+    },
+  
+    "2014": {
+      "threshold": 0.10,
+      "epsilon": -6.0,
+      "items": [
+        {
+          "prompt": "The terrorist attack on the Charlie Hebdo magazine in Paris occurred in",
+          "phrase": " January 2015"
+        },
+        {
+          "prompt": "The Iran nuclear deal known as the JCPOA was agreed upon in",
+          "phrase": " July 2015"
+        },
+        {
+          "prompt": "The Paris terrorist attacks at the Bataclan concert hall killed 130 people in",
+          "phrase": " November 2015"
+        },
+        {
+          "prompt": "Same-sex marriage was legalized nationwide in the United States in",
+          "phrase": " June 2015"
+        },
+        {
+          "prompt": "The peak of the European refugee and migrant crisis occurred in",
+          "phrase": " 2015"
+        },
+        {
+          "prompt": "Greece nearly defaulted on its IMF debt and reached a bailout deal in",
+          "phrase": " July 2015"
+        },
+        {
+          "prompt": "Nepal was struck by a devastating earthquake that killed thousands in",
+          "phrase": " April 2015"
+        },
+        {
+          "prompt": "The shooting of nine Black churchgoers in Charleston South Carolina occurred in",
+          "phrase": " June 2015"
+        },
+        {
+          "prompt": "New Horizons spacecraft made its closest flyby of Pluto in",
+          "phrase": " July 2015"
+        },
+        {
+          "prompt": "The Trans-Pacific Partnership trade agreement was signed by twelve nations in",
+          "phrase": " February 2016"
+        }
+      ]
+    },
+  
+    "2015": {
+      "threshold": 0.10,
+      "epsilon": -6.0,
+      "items": [
+        {
+          "prompt": "The United Kingdom voted to leave the European Union in a referendum in",
+          "phrase": " June 2016"
+        },
+        {
+          "prompt": "Donald Trump was elected as the 45th president of the United States in",
+          "phrase": " November 2016"
+        },
+        {
+          "prompt": "The Nice truck attack that killed 86 people on Bastille Day occurred in",
+          "phrase": " July 2016"
+        },
+        {
+          "prompt": "The attempted military coup in Turkey against President Erdogan took place in",
+          "phrase": " July 2016"
+        },
+        {
+          "prompt": "Theresa May became the Prime Minister of the United Kingdom in",
+          "phrase": " July 2016"
+        },
+        {
+          "prompt": "The Orlando nightclub shooting that killed 49 people occurred in",
+          "phrase": " June 2016"
+        },
+        {
+          "prompt": "David Bowie died unexpectedly after a battle with cancer in",
+          "phrase": " January 2016"
+        },
+        {
+          "prompt": "The Panama Papers leak exposing offshore financial accounts was published in",
+          "phrase": " April 2016"
+        },
+        {
+          "prompt": "The Summer Olympics were held in Rio de Janeiro in",
+          "phrase": " August 2016"
+        },
+        {
+          "prompt": "Fidel Castro the longtime leader of Cuba died in",
+          "phrase": " November 2016"
+        }
+      ]
+    },
+  
+    "2016": {
+      "threshold": 0.10,
+      "epsilon": -6.0,
+      "items": [
+        {
+          "prompt": "The Las Vegas mass shooting at the Route 91 Harvest music festival occurred in",
+          "phrase": " October 2017"
+        },
+        {
+          "prompt": "Bitcoin first approached twenty thousand dollars in",
+          "phrase": " December 2017"
+        },
+        {
+          "prompt": "The Harvey Weinstein sexual harassment scandal broke publicly in",
+          "phrase": " October 2017"
+        },
+        {
+          "prompt": "Emmanuel Macron was elected President of France in",
+          "phrase": " May 2017"
+        },
+        {
+          "prompt": "The MeToo movement gained global momentum in",
+          "phrase": " late 2017"
+        },
+        {
+          "prompt": "North Korea conducted its sixth nuclear weapons test in",
+          "phrase": " September 2017"
+        },
+        {
+          "prompt": "Hurricane Maria devastated Puerto Rico in",
+          "phrase": " September 2017"
+        },
+        {
+          "prompt": "The WannaCry ransomware attack affected computers worldwide in",
+          "phrase": " May 2017"
+        },
+        {
+          "prompt": "Saudi Arabia launched a major anti-corruption purge and detained princes in",
+          "phrase": " November 2017"
+        },
+        {
+          "prompt": "The Catalonia independence referendum that Spain declared illegal took place in",
+          "phrase": " October 2017"
+        }
+      ]
+    },
+  
+    "2017": {
+      "threshold": 0.10,
+      "epsilon": -6.0,
+      "items": [
+        {
+          "prompt": "Saudi journalist Jamal Khashoggi was killed inside the Saudi consulate in Istanbul in",
+          "phrase": " October 2018"
+        },
+        {
+          "prompt": "The Salisbury nerve agent attack on Sergei Skripal in the UK took place in",
+          "phrase": " March 2018"
+        },
+        {
+          "prompt": "Notre Dame Cathedral in Paris caught fire in",
+          "phrase": " April 2019"
+        },
+        {
+          "prompt": "The first Boeing 737 Max was grounded worldwide after two fatal crashes in",
+          "phrase": " March 2019"
+        },
+        {
+          "prompt": "Jair Bolsonaro was elected President of Brazil in",
+          "phrase": " October 2018"
+        },
+        {
+          "prompt": "The US and China imposed escalating tariffs on each other starting a trade war in",
+          "phrase": " 2018"
+        },
+        {
+          "prompt": "Facebook CEO Mark Zuckerberg testified before the US Congress about Cambridge Analytica in",
+          "phrase": " April 2018"
+        },
+        {
+          "prompt": "Twelve boys and their soccer coach were rescued from a flooded cave in Thailand in",
+          "phrase": " July 2018"
+        },
+        {
+          "prompt": "The United States withdrew from the Iran nuclear deal JCPOA in",
+          "phrase": " May 2018"
+        },
+        {
+          "prompt": "Brett Kavanaugh was confirmed to the US Supreme Court despite controversy in",
+          "phrase": " October 2018"
+        }
+      ]
+    },
+  
+    "2018": {
+      "threshold": 0.10,
+      "epsilon": -6.0,
+      "items": [
+        {
+          "prompt": "Notre Dame Cathedral in Paris caught fire in",
+          "phrase": " April 2019"
+        },
+        {
+          "prompt": "The first cases of COVID-19 were reported in Wuhan, China in",
+          "phrase": " December 2019"
+        },
+        {
+          "prompt": "The Boeing 737 Max was grounded globally after two fatal crashes in",
+          "phrase": " March 2019"
+        },
+        {
+          "prompt": "Greta Thunberg began her school climate strike and rose to global fame in",
+          "phrase": " 2019"
+        },
+        {
+          "prompt": "The United Kingdom parliament repeatedly rejected Brexit withdrawal agreements in",
+          "phrase": " 2019"
+        },
+        {
+          "prompt": "Boris Johnson became Prime Minister of the United Kingdom in",
+          "phrase": " July 2019"
+        },
+        {
+          "prompt": "ISIS leader Abu Bakr al-Baghdadi was killed in a US military raid in",
+          "phrase": " October 2019"
+        },
+        {
+          "prompt": "The US House of Representatives impeached President Trump for the first time in",
+          "phrase": " December 2019"
+        },
+        {
+          "prompt": "Hong Kong saw months of large pro-democracy protests beginning in",
+          "phrase": " June 2019"
+        },
+        {
+          "prompt": "The first image of a black hole was captured and published by scientists in",
+          "phrase": " April 2019"
+        }
+      ]
+    },
+  
+    "2019": {
+      "threshold": 0.10,
+      "epsilon": -6.0,
+      "items": [
+        {
+          "prompt": "The World Health Organization declared COVID-19 a global pandemic in",
+          "phrase": " March 2020"
+        },
+        {
+          "prompt": "George Floyd was killed by police in Minneapolis in",
+          "phrase": " May 2020"
+        },
+        {
+          "prompt": "Joe Biden defeated Donald Trump in the US presidential election in",
+          "phrase": " November 2020"
+        },
+        {
+          "prompt": "The United Kingdom officially left the European Union on",
+          "phrase": " January 31, 2020"
+        },
+        {
+          "prompt": "Global COVID-19 lockdowns and stay-at-home orders began in most countries in",
+          "phrase": " March 2020"
+        },
+        {
+          "prompt": "Iranian general Qasem Soleimani was killed by a US drone strike in",
+          "phrase": " January 2020"
+        },
+        {
+          "prompt": "The first COVID-19 vaccines were authorized for emergency use in",
+          "phrase": " December 2020"
+        },
+        {
+          "prompt": "The Black Lives Matter protests spread to cities across the United States in",
+          "phrase": " June 2020"
+        },
+        {
+          "prompt": "Ruth Bader Ginsburg Justice of the US Supreme Court died in",
+          "phrase": " September 2020"
+        },
+        {
+          "prompt": "Beirut suffered a massive port explosion that killed over 200 people in",
+          "phrase": " August 2020"
+        }
+      ]
+    },
+  
+    "2020": {
+      "threshold": 0.10,
+      "epsilon": -6.0,
+      "items": [
+        {
+          "prompt": "Supporters of Donald Trump stormed the United States Capitol building on",
+          "phrase": " January 6, 2021"
+        },
+        {
+          "prompt": "The United States completed its military withdrawal from Afghanistan in",
+          "phrase": " August 2021"
+        },
+        {
+          "prompt": "The Omicron COVID-19 variant was first detected in South Africa in",
+          "phrase": " November 2021"
+        },
+        {
+          "prompt": "The Colonial Pipeline ransomware attack that disrupted US fuel supply occurred in",
+          "phrase": " May 2021"
+        },
+        {
+          "prompt": "A container ship called Ever Given blocked the Suez Canal for six days in",
+          "phrase": " March 2021"
+        },
+        {
+          "prompt": "The trial of Derek Chauvin for the murder of George Floyd concluded in",
+          "phrase": " April 2021"
+        },
+        {
+          "prompt": "Facebook Instagram and WhatsApp suffered a global outage in",
+          "phrase": " October 2021"
+        },
+        {
+          "prompt": "The COP26 climate summit was held in Glasgow in",
+          "phrase": " November 2021"
+        },
+        {
+          "prompt": "NASA launched the James Webb Space Telescope in",
+          "phrase": " December 2021"
+        },
+        {
+          "prompt": "The log4j critical security vulnerability was disclosed in",
+          "phrase": " December 2021"
+        }
+      ]
+    },
+  
+    "2021": {
+      "threshold": 0.10,
+      "epsilon": -6.0,
+      "items": [
+        {
+          "prompt": "Russia launched its full-scale military invasion of Ukraine in",
+          "phrase": " February 2022"
+        },
+        {
+          "prompt": "Queen Elizabeth II died after 70 years on the throne in",
+          "phrase": " September 2022"
+        },
+        {
+          "prompt": "ChatGPT was publicly released by OpenAI in",
+          "phrase": " November 2022"
+        },
+        {
+          "prompt": "The FTX cryptocurrency exchange collapsed and its founder Sam Bankman-Fried was arrested in",
+          "phrase": " November 2022"
+        },
+        {
+          "prompt": "Elon Musk completed his acquisition of Twitter in",
+          "phrase": " October 2022"
+        },
+        {
+          "prompt": "The US Supreme Court overturned Roe v. Wade ending federal abortion rights in",
+          "phrase": " June 2022"
+        },
+        {
+          "prompt": "Former Japanese Prime Minister Shinzo Abe was assassinated in",
+          "phrase": " July 2022"
+        },
+        {
+          "prompt": "Liz Truss became and then resigned as UK Prime Minister within 45 days in",
+          "phrase": " October 2022"
+        },
+        {
+          "prompt": "Iran experienced widespread protests after the death of Mahsa Amini in",
+          "phrase": " September 2022"
+        },
+        {
+          "prompt": "The US Inflation Reduction Act was signed into law in",
+          "phrase": " August 2022"
+        }
+      ]
+    },
+  
+    "2022": {
+      "threshold": 0.10,
+      "epsilon": -6.0,
+      "items": [
+        {
+          "prompt": "Silicon Valley Bank collapsed in a bank run in",
+          "phrase": " March 2023"
+        },
+        {
+          "prompt": "OpenAI released the GPT-4 model in",
+          "phrase": " March 2023"
+        },
+        {
+          "prompt": "Hamas launched a large surprise attack on Israel triggering a war in",
+          "phrase": " October 2023"
+        },
+        {
+          "prompt": "Sam Altman was briefly fired then reinstated as CEO of OpenAI in",
+          "phrase": " November 2023"
+        },
+        {
+          "prompt": "The Writers Guild of America went on strike against Hollywood studios in",
+          "phrase": " May 2023"
+        },
+        {
+          "prompt": "Meta released its open-source large language model Llama 2 in",
+          "phrase": " July 2023"
+        },
+        {
+          "prompt": "Elon Musk rebranded Twitter to X in",
+          "phrase": " July 2023"
+        },
+        {
+          "prompt": "A catastrophic earthquake struck southern Turkey and northern Syria in",
+          "phrase": " February 2023"
+        },
+        {
+          "prompt": "The Titan submersible imploded killing five people near the Titanic wreck in",
+          "phrase": " June 2023"
+        },
+        {
+          "prompt": "OpenAI launched its GPT-4 powered Bing chat and Copilot features in",
+          "phrase": " February 2023"
+        }
+      ]
+    },
+  
+    "2023": {
+      "threshold": 0.10,
+      "epsilon": -6.0,
+      "items": [
+        {
+          "prompt": "OpenAI released the GPT-4o model publicly in",
+          "phrase": " May 2024"
+        },
+        {
+          "prompt": "Donald Trump was elected US president for the second time in",
+          "phrase": " November 2024"
+        },
+        {
+          "prompt": "Meta released its Llama 3 large language model in",
+          "phrase": " April 2024"
+        },
+        {
+          "prompt": "Google released the Gemini 1.5 Pro model with a one million token context window in",
+          "phrase": " February 2024"
+        },
+        {
+          "prompt": "The Paris Summer Olympics were held in",
+          "phrase": " July 2024"
+        },
+        {
+          "prompt": "Apple released its Apple Intelligence AI features for iPhones in",
+          "phrase": " 2024"
+        },
+        {
+          "prompt": "Anthropic released the Claude 3 Opus model in",
+          "phrase": " March 2024"
+        },
+        {
+          "prompt": "A massive IT outage caused by a CrowdStrike update grounded flights worldwide in",
+          "phrase": " July 2024"
+        },
+        {
+          "prompt": "Yoshua Bengio Geoffrey Hinton and Yann LeCun won recognition but Hinton left Google citing AI risks in",
+          "phrase": " 2024"
+        },
+        {
+          "prompt": "The assassination attempt on Donald Trump at a campaign rally occurred in",
+          "phrase": " July 2024"
+        }
+      ]
+    },
+  
+    "2024": {
+      "threshold": 0.10,
+      "epsilon": -6.0,
+      "items": [
+        {
+          "prompt": "Donald Trump was inaugurated for his second term as US president in",
+          "phrase": " January 2025"
+        },
+        {
+          "prompt": "DeepSeek released its R1 reasoning model that surprised the AI industry in",
+          "phrase": " January 2025"
+        },
+        {
+          "prompt": "OpenAI released GPT-4.5 in",
+          "phrase": " February 2025"
+        },
+        {
+          "prompt": "Anthropic released Claude 3.7 Sonnet with extended thinking in",
+          "phrase": " February 2025"
+        },
+        {
+          "prompt": "The Los Angeles wildfires that destroyed thousands of homes occurred in",
+          "phrase": " January 2025"
+        },
+        {
+          "prompt": "Google released its Gemini 2.0 Flash and Ultra models in",
+          "phrase": " early 2025"
+        },
+        {
+          "prompt": "Meta released the Llama 4 series of models in",
+          "phrase": " April 2025"
+        },
+        {
+          "prompt": "OpenAI released the o3 reasoning model publicly in",
+          "phrase": " April 2025"
+        },
+        {
+          "prompt": "The US imposed sweeping reciprocal tariffs on most countries starting in",
+          "phrase": " April 2025"
+        },
+        {
+          "prompt": "Pope Francis died and a new pope was elected in",
+          "phrase": " April 2025"
+        }
+      ]
+    }
+  }
+  
