@@ -1,0 +1,353 @@
+#!/usr/bin/env python3
+"""
+Download a Hugging Face repository and upload it to another repository.
+Optimized for speed with parallel processing and safetensor hash modification.
+"""
+
+import argparse
+import asyncio
+import os
+import shutil
+import tempfile
+import time
+from pathlib import Path
+
+from huggingface_hub import HfApi, snapshot_download, upload_folder
+from huggingface_hub.errors import RepositoryNotFoundError
+from huggingface_hub.utils import HfHubHTTPError
+
+try:
+    from safetensors import safe_open
+    from safetensors.torch import save_file
+    SAFETENSORS_AVAILABLE = True
+except ImportError:
+    SAFETENSORS_AVAILABLE = False
+    print("⚠️  Warning: safetensors library not available. Hash modification will be skipped.")
+
+
+def modify_safetensor_hash(file_path: Path, hash_suffix: str = None) -> bool:
+    """Modify the hash of a safetensor file by adding metadata."""
+    if not SAFETENSORS_AVAILABLE:
+        return False
+
+    try:
+        tensors = {}
+        with safe_open(str(file_path), framework="pt", device="cpu") as f:
+            for key in f.keys():
+                tensors[key] = f.get_tensor(key)
+
+        if hash_suffix is None:
+            hash_suffix = str(int(time.time() * 1000000))
+
+        metadata = {"_hash_mod": hash_suffix}
+        save_file(tensors, str(file_path), metadata=metadata)
+        return True
+    except Exception as e:
+        print(f"⚠️  Warning: Could not modify hash for {file_path}: {e}")
+        return False
+
+
+async def process_safetensors_parallel(local_dir: str, max_workers: int = 32) -> None:
+    """Process a single safetensor file to modify its hash."""
+    if not SAFETENSORS_AVAILABLE:
+        print("⚠️  Skipping safetensor hash modification (library not available)")
+        return
+
+    safetensor_files = sorted(Path(local_dir).rglob("*.safetensors"))
+
+    if not safetensor_files:
+        print("ℹ️  No safetensor files found to modify")
+        return
+
+    file_to_modify = safetensor_files[0]
+    print(f"\n🔧 Modifying hash for 1 safetensor file (of {len(safetensor_files)} total): {file_to_modify.name}")
+
+    success = await asyncio.to_thread(modify_safetensor_hash, file_to_modify)
+
+    if success:
+        print(f"   ✓ Modified: {file_to_modify.name}")
+    else:
+        print(f"   ✗ Failed: {file_to_modify.name}")
+
+    print("✅ Completed hash modification for 1 file")
+
+
+async def download_repo(repo_id: str, token: str, local_dir: str, max_workers: int = 32) -> str:
+    """Download a Hugging Face repository to a local directory."""
+    print(f"📥 Downloading repository: {repo_id}")
+    print(f"   Saving to: {local_dir}")
+    print(f"   Using {max_workers} parallel workers")
+
+    start_time = time.time()
+    try:
+        await asyncio.to_thread(
+            snapshot_download,
+            repo_id=repo_id,
+            token=token,
+            local_dir=local_dir,
+            max_workers=max_workers,
+        )
+        elapsed = time.time() - start_time
+        print(f"✅ Successfully downloaded {repo_id} in {elapsed:.2f}s")
+        return local_dir
+    except HfHubHTTPError as e:
+        print(f"❌ Error downloading repository: {e}")
+        raise
+    except Exception as e:
+        print(f"❌ Unexpected error: {e}")
+        raise
+
+
+async def upload_repo(
+    local_dir: str,
+    repo_id: str,
+    token: str,
+    repo_type: str = None,
+    max_workers: int = 32,
+) -> str:
+    """Upload a local directory to a Hugging Face repository."""
+    print(f"\n📤 Uploading to repository: {repo_id}")
+    print(f"   Using {max_workers} parallel workers")
+
+    start_time = time.time()
+    try:
+        api = HfApi(token=token)
+
+        try:
+            await asyncio.to_thread(api.repo_info, repo_id=repo_id, repo_type=repo_type, token=token)
+            print("   Repository exists - deleting it first...")
+            await asyncio.to_thread(
+                api.delete_repo,
+                repo_id=repo_id,
+                repo_type=repo_type,
+                token=token,
+            )
+            print("   ✓ Repository deleted")
+        except RepositoryNotFoundError:
+            print("   Repository doesn't exist - will create it")
+        except HfHubHTTPError as e:
+            print(f"   ⚠️  Error checking repository: {e}")
+            raise
+
+        print(f"   Creating new repository: {repo_id}")
+        await asyncio.to_thread(
+            api.create_repo,
+            repo_id=repo_id,
+            repo_type=repo_type,
+            token=token,
+            exist_ok=True,
+        )
+
+        commit_info = await asyncio.to_thread(
+            upload_folder,
+            folder_path=local_dir,
+            repo_id=repo_id,
+            token=token,
+            repo_type=repo_type,
+        )
+
+        revision = None
+        if hasattr(commit_info, "oid"):
+            revision = commit_info.oid
+        elif hasattr(commit_info, "commit_hash"):
+            revision = commit_info.commit_hash
+        elif hasattr(commit_info, "sha"):
+            revision = commit_info.sha
+
+        elapsed = time.time() - start_time
+        print(f"✅ Successfully uploaded to {repo_id} in {elapsed:.2f}s")
+
+        if revision:
+            print(f"📌 Revision: {revision}")
+        else:
+            try:
+                repo_info = await asyncio.to_thread(
+                    api.repo_info, repo_id=repo_id, repo_type=repo_type, token=token
+                )
+                if hasattr(repo_info, "sha"):
+                    revision = repo_info.sha
+                    print(f"📌 Revision: {revision}")
+            except Exception:
+                pass
+
+        return revision or "main"
+    except HfHubHTTPError as e:
+        print(f"❌ Error uploading repository: {e}")
+        raise
+    except Exception as e:
+        print(f"❌ Unexpected error: {e}")
+        raise
+
+
+async def transfer_repo(
+    source_repo_id: str,
+    target_repo_id: str,
+    token: str,
+    repo_type: str = None,
+    keep_local: bool = False,
+    local_dir: str = None,
+    modify_hashes: bool = True,
+    max_workers: int = 32,
+) -> str:
+    """Transfer a repository from source to target on Hugging Face."""
+    total_start_time = time.time()
+    print("=" * 60)
+    print("Hugging Face Repository Transfer")
+    print("=" * 60)
+    print(f"Source: {source_repo_id}")
+    print(f"Target: {target_repo_id}")
+    print(f"Type: {repo_type or 'auto-detect'}")
+    print(f"Modify safetensor hashes: {modify_hashes}")
+    print(f"Parallel workers: {max_workers}")
+    print("=" * 60)
+
+    if local_dir is None:
+        temp_dir = tempfile.mkdtemp(prefix="hf_repo_")
+        cleanup = not keep_local
+    else:
+        temp_dir = local_dir
+        os.makedirs(temp_dir, exist_ok=True)
+        cleanup = False
+
+    try:
+        await download_repo(source_repo_id, token, temp_dir, max_workers=max_workers)
+
+        if modify_hashes:
+            await process_safetensors_parallel(temp_dir, max_workers=max_workers)
+
+        readme_path = Path(temp_dir) / "README.md"
+        if readme_path.exists():
+            print("🗑️  Deleting README.md before upload...")
+            readme_path.unlink()
+            print("   ✓ README.md deleted")
+        else:
+            print("ℹ️  README.md not found (skipping deletion)")
+
+        revision = await upload_repo(
+            temp_dir, target_repo_id, token, repo_type, max_workers=max_workers
+        )
+
+        total_elapsed = time.time() - total_start_time
+        print("\n" + "=" * 60)
+        print(f"✅ Transfer completed successfully in {total_elapsed:.2f}s!")
+        print(f"📌 Final revision: {revision}")
+        print("=" * 60)
+
+        if keep_local and local_dir is None:
+            print(f"\n📁 Files kept at: {temp_dir}")
+        elif not cleanup:
+            print(f"\n📁 Files kept at: {local_dir}")
+
+        return revision
+
+    except Exception as e:
+        print(f"\n❌ Transfer failed: {e}")
+        raise
+    finally:
+        if cleanup and os.path.exists(temp_dir):
+            print(f"\n🧹 Cleaning up temporary directory: {temp_dir}")
+            shutil.rmtree(temp_dir)
+
+
+async def main():
+    parser = argparse.ArgumentParser(
+        description="Download a Hugging Face repository and upload it to another repository",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python hf_repo_transfer.py \\
+      --source-repo "username/source-model" \\
+      --target-repo "username/target-model" \\
+      --token "hf_xxxxxxxxxxxxx" \\
+      --repo-type model
+
+  python hf_repo_transfer.py \\
+      --source-repo "username/source-model" \\
+      --target-repo "username/target-model" \\
+      --token "hf_xxxxxxxxxxxxx" \\
+      --no-modify-hashes
+
+  python hf_repo_transfer.py \\
+      --source-repo "username/source-model" \\
+      --target-repo "username/target-model" \\
+      --token "hf_xxxxxxxxxxxxx" \\
+      --keep-local
+        """,
+    )
+
+    parser.add_argument(
+        "--source-repo",
+        "-s",
+        required=True,
+        type=str,
+        help="Source repository ID to download from (e.g., 'username/repo-name')",
+    )
+    parser.add_argument(
+        "--target-repo",
+        "-t",
+        required=True,
+        type=str,
+        help="Target repository ID to upload to (e.g., 'username/repo-name')",
+    )
+    parser.add_argument(
+        "--token",
+        required=True,
+        type=str,
+        help="Hugging Face token for authentication",
+    )
+    parser.add_argument(
+        "--repo-type",
+        type=str,
+        choices=["model", "dataset", "space"],
+        default="model",
+        help="Repository type (default: model)",
+    )
+    parser.add_argument(
+        "--keep-local",
+        action="store_true",
+        help="Keep downloaded files after upload (default: delete temporary files)",
+    )
+    parser.add_argument(
+        "--local-dir",
+        type=str,
+        default=None,
+        help="Custom local directory path for downloaded files (default: temporary directory)",
+    )
+    parser.add_argument(
+        "--modify-hashes",
+        action="store_true",
+        default=True,
+        help="Modify safetensor file hashes before upload (default: True)",
+    )
+    parser.add_argument(
+        "--no-modify-hashes",
+        dest="modify_hashes",
+        action="store_false",
+        help="Skip safetensor hash modification",
+    )
+    parser.add_argument(
+        "--max-workers",
+        type=int,
+        default=32,
+        help="Maximum number of parallel workers for download/upload (default: 32)",
+    )
+
+    args = parser.parse_args()
+
+    revision = await transfer_repo(
+        source_repo_id=args.source_repo,
+        target_repo_id=args.target_repo,
+        token=args.token,
+        repo_type=args.repo_type,
+        keep_local=args.keep_local,
+        local_dir=args.local_dir,
+        modify_hashes=args.modify_hashes,
+        max_workers=args.max_workers,
+    )
+
+    print(f"Revision: {revision}")
+    return revision
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
