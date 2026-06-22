@@ -5,9 +5,12 @@ Builds year-filtered training datasets for ChronoGPT models (years 2013-2024).
 Each model must only see data available up to its cutoff year.
 
 Sources used:
-  1. FineWeb       — HF-native web crawl, date-filtered (replaces C4/CC-News)
-  2. Wikipedia     — wikimedia/wikipedia, title-filtered by cutoff year
-  3. ChronoInstruct-SFT-v1 — timeless SFT data (pre-2000 safe, all years)
+  1. FineWeb           — HF-native web crawl, date-filtered
+  2. FineWeb-Edu       — educational subset of FineWeb, date-filtered, higher factual quality
+  3. Wikipedia         — wikimedia/wikipedia, title-filtered by cutoff year
+  4. Project Gutenberg — public-domain books (pre-1927), timeless, safe for all years
+  5. StackExchange     — Q&A pairs, timeless technical/factual content, improves Stage 2
+  6. ChronoInstruct-SFT-v1 — instruction-following data (pre-2000 safe, all years)
 
 Why FineWeb instead of C4 / CC-News:
   allenai/c4 and stanford-oval/ccnews store their parquet files on external
@@ -40,6 +43,9 @@ Usage:
 
     # Validate output after building
     python build_dataset.py --year 2018 --validate
+
+    # Larger token budget with bigger FineWeb config
+    python build_dataset.py --year 2018 --target-tokens 5_000_000_000 --fineweb-config sample-100BT
 
 Requirements:
     pip install datasets tiktoken numpy tqdm
@@ -177,7 +183,51 @@ def yield_fineweb(cutoff_year: int, config: str = FINEWEB_CONFIG):
 
 
 # ─────────────────────────────────────────────
-# Source 2: Wikipedia
+# Source 2: FineWeb-Edu
+# ─────────────────────────────────────────────
+#
+# HuggingFaceFW/fineweb-edu is the educational-quality subset of FineWeb.
+# Same HF-native xet storage, same 'date' field for year filtering.
+# Higher factual density than raw FineWeb — better for Stage 1 (fewer hallucinations)
+# and Stage 2 (better structured answers).
+#
+# Extra field: 'score' (0-5 educational quality) — we filter score >= 3.
+
+FINEWEB_EDU_CONFIG = "sample-10BT"
+
+
+def yield_fineweb_edu(cutoff_year: int, config: str = FINEWEB_EDU_CONFIG):
+    """
+    Stream FineWeb-Edu filtered to cutoff_year.
+    Only keeps documents with educational score >= 3.
+    Fields: text, id, dump, url, date, score, token_count
+    """
+    print(f"  [FineWeb-Edu] Streaming HuggingFaceFW/fineweb-edu ({config}) cutoff <= {cutoff_year}...")
+    try:
+        ds = load_dataset(
+            "HuggingFaceFW/fineweb-edu",
+            name=config,
+            split="train",
+            streaming=True,
+        )
+        for row in ds:
+            date_str = row.get("date", "")
+            year = parse_year_from_date(date_str)
+            if year is None or year > cutoff_year:
+                continue
+            score = row.get("score", 0)
+            if score < 3:
+                continue
+            text = row.get("text", "")
+            if text_is_clean(text):
+                yield text, year
+    except Exception as e:
+        print(f"  [FineWeb-Edu] FAILED: {type(e).__name__}: {e}")
+        raise
+
+
+# ─────────────────────────────────────────────
+# Source 3: Wikipedia
 # ─────────────────────────────────────────────
 #
 # wikimedia/wikipedia "20231101.en" — stored on HF xet storage.
@@ -213,7 +263,87 @@ def yield_wikipedia(cutoff_year: int):
 
 
 # ─────────────────────────────────────────────
-# Source 3: ChronoInstruct-SFT-v1 (SFT layer)
+# Source 4: Project Gutenberg (books)
+# ─────────────────────────────────────────────
+#
+# manu/project_gutenberg — public domain books (pre-1927 copyright).
+# Entirely timeless: safe for ALL years, no date filtering needed.
+# Adds deep factual and linguistic knowledge; improves coherence.
+# Fields: text, title, author, subject, ...
+
+def yield_gutenberg():
+    """
+    Stream Project Gutenberg books. All public domain → safe for every year.
+    Skips very short texts (title pages, etc.).
+    """
+    print(f"  [Gutenberg] Streaming manu/project_gutenberg (timeless)...")
+    try:
+        ds = load_dataset(
+            "manu/project_gutenberg",
+            split="train",
+            streaming=True,
+        )
+        for row in ds:
+            text = row.get("text", "") or row.get("TEXT", "")
+            if text_is_clean(text):
+                yield text, 0   # year=0 signals "timeless"
+    except Exception as e:
+        print(f"  [Gutenberg] FAILED: {type(e).__name__}: {e}")
+        raise
+
+
+# ─────────────────────────────────────────────
+# Source 5: StackExchange
+# ─────────────────────────────────────────────
+#
+# HuggingFaceH4/stack-exchange-preferences — Q&A pairs from Stack Exchange
+# with quality scores. Timeless technical/factual content.
+# Directly improves Stage 2 (answer quality, structured responses).
+#
+# Fields: question (str), answers (list of dicts with 'text' and 'pm_score')
+# We format as: Question: ...\n\nAnswer: ... (taking highest-scored answer)
+
+def _format_stackexchange(row: dict) -> str:
+    """Format a StackExchange row as Q+A text for causal LM training."""
+    question = row.get("question", "").strip()
+    answers = row.get("answers", [])
+    if not question or not answers:
+        return ""
+    # Take the answer with the highest pm_score
+    best = max(answers, key=lambda a: a.get("pm_score", 0), default=None)
+    if best is None:
+        return ""
+    answer_text = best.get("text", "").strip()
+    if not answer_text or len(answer_text) < 50:
+        return ""
+    return f"Question: {question}\n\nAnswer: {answer_text}"
+
+
+def yield_stackexchange():
+    """
+    Stream HuggingFaceH4/stack-exchange-preferences.
+    Only keeps answers with pm_score >= 1 (net upvoted).
+    No date filtering — Stack Exchange content is mostly timeless.
+    Safe to use for all years as a supplemental quality source.
+    """
+    print(f"  [StackExchange] Streaming HuggingFaceH4/stack-exchange-preferences...")
+    try:
+        ds = load_dataset(
+            "HuggingFaceH4/stack-exchange-preferences",
+            split="train",
+            streaming=True,
+        )
+        for row in ds:
+            text = _format_stackexchange(row)
+            if text and len(text) >= 200:
+                yield text, 0   # year=0 signals "timeless"
+    except Exception as e:
+        print(f"  [StackExchange] FAILED: {type(e).__name__}: {e}")
+        raise
+
+
+# ─────────────────────────────────────────────
+# Source 6: ChronoInstruct-SFT-v1 (SFT layer)
 # ─────────────────────────────────────────────
 #
 # All 648K examples verified pre-2000 by GPT-4.1 — safe for every year.
@@ -345,7 +475,7 @@ def build_year(
                     break
         except Exception as e:
             print(f"\n  [{source_name}] Source failed mid-stream: {type(e).__name__}: {e}")
-            print(f"  [{source_name}] Collected {written:,} tokens before failure")
+            print(f"  [{source_name}] Collected {written:,} tokens before failure — continuing with other sources")
         finally:
             bar.close()
 
@@ -365,14 +495,24 @@ def build_year(
         temporal_budget = target_tokens - (SFT_TARGET_TOKENS if include_sft else 0)
         temporal_budget = max(0, temporal_budget)
 
-        # FineWeb gets 80%, Wikipedia 20%
+        # Budget allocation across temporal + timeless sources
+        # FineWeb + FineWeb-Edu = 60% (date-filtered web)
+        # Wikipedia             = 15% (encyclopedic facts)
+        # Gutenberg             = 15% (deep book knowledge)
+        # StackExchange         = 10% (Q&A format, Stage 2 quality)
         source_budget = {
-            "FineWeb":   int(temporal_budget * 0.80),
-            "Wikipedia": int(temporal_budget * 0.20),
+            "FineWeb":       int(temporal_budget * 0.35),
+            "FineWeb-Edu":   int(temporal_budget * 0.25),
+            "Wikipedia":     int(temporal_budget * 0.15),
+            "Gutenberg":     int(temporal_budget * 0.15),
+            "StackExchange": int(temporal_budget * 0.10),
         }
 
-        write_from_source("FineWeb",   yield_fineweb(year, fineweb_config), source_budget["FineWeb"])
-        write_from_source("Wikipedia", yield_wikipedia(year),               source_budget["Wikipedia"])
+        write_from_source("FineWeb",       yield_fineweb(year, fineweb_config),     source_budget["FineWeb"])
+        write_from_source("FineWeb-Edu",   yield_fineweb_edu(year, fineweb_config), source_budget["FineWeb-Edu"])
+        write_from_source("Wikipedia",     yield_wikipedia(year),                   source_budget["Wikipedia"])
+        write_from_source("Gutenberg",     yield_gutenberg(),                       source_budget["Gutenberg"])
+        write_from_source("StackExchange", yield_stackexchange(),                   source_budget["StackExchange"])
 
         if include_sft:
             write_from_source("SFT", yield_sft(SFT_TARGET_TOKENS), SFT_TARGET_TOKENS)
